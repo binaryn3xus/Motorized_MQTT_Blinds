@@ -1,0 +1,22 @@
+#define USER_SSID                 "YOUR-WIFI-SSID"
+#define USER_PASSWORD             "YOUR-WIFI-PASS"
+#define USER_MQTT_SERVER          "IP-MQTT-Server"
+#define USER_MQTT_PORT            1883
+#define USER_MQTT_USERNAME        "MQTT-USERNAME"
+#define USER_MQTT_PASSWORD        "MQTT-PASSWORD"
+#define USER_MQTT_CLIENT_NAME     "BlindsMCU"     // Used to define MQTT topics, MQTT Client ID, and ArduinoOTA
+#define OTAPATH                   "/firmware"     // Set path for update
+#define SERVERPORT                80              // Server port
+
+#define STEPPER_SPEED             35              //Defines the speed in RPM for your stepper motor
+#define STEPPER_STEPS_PER_REV     1028            //Defines the number of pulses that is required for the stepper to rotate 360 degrees
+#define STEPPER_MICROSTEPPING     0               //Defines microstepping 0 = no microstepping, 1 = 1/2 stepping, 2 = 1/4 stepping
+#define DRIVER_INVERTED_SLEEP     1               //Defines sleep while pin high.  If your motor will not rotate freely when on boot, comment this line out.
+
+#define STEPS_TO_CLOSE            12              //Defines the number of steps needed to open or close fully
+
+#define STEPPER_DIR_PIN           D6
+#define STEPPER_STEP_PIN          D7
+#define STEPPER_SLEEP_PIN         D5
+#define STEPPER_MICROSTEP_1_PIN   14
+#define STEPPER_MICROSTEP_2_PIN   12

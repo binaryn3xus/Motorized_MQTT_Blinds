@@ -1,11 +1,17 @@
 # Motorized_MQTT_Blinds
 
+### THIS IS A FORK OF ROB'S CODE FROM THE HOOK UP: [MOTORIZED MQTT BLINDS PROJECT](https://github.com/thehookup/Motorized_MQTT_Blinds/)
 
-This repository is to accompany my Motorized_MQTT_Blinds video:
+______________________________________________
+
+## The Original Video
+This repository is to accompany Rob's Motorized_MQTT_Blinds video:
 
 [![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/1O_1gUFumQM/0.jpg)](https://www.youtube.com/watch?v=1O_1gUFumQM)
 
 ## Parts List
+*Affiliate links to support Rob!*
+
 Stepper Motors: https://amzn.to/2D5rVsF
 
 Stepper Drivers: https://amzn.to/2OZqW1W
@@ -18,17 +24,27 @@ Buck Converter: https://amzn.to/2UsQ7jA
 
 ## 3D Printing
 
-Download the correct STL file for your style of tilt rod
+Download the correct STL file(s) for your style of tilt rod. You will find all the 3D Print file in the `extra/files` folder.
 
 ## Wiring Schematic
 
-![alt text](https://github.com/thehookup/Motorized_MQTT_Blinds/blob/master/Schematic.jpg?raw=true)
+![alt text](extra/images/Schematic.jpg)
 
 **Dont forget to cut the center trace on the stepper motor as shown in the youtube video**
 
-## File setup
+## How to setup, build, and flash this image
 
-Fill out the entire USER CONFIGURATION section of the code.
+I recommend using VSCode with the PlatformIO extension. So these instructions will only support this method:
+
+## First-Time Setupdfvb 
+1) Clone the project or download/unzip the files from the browser
+2) Open in VSCode
+3) Rename `user_config.h.sample` to `user_config.h`
+4) Fill out `user_config.h` with your information for your setup.
+5) When you are ready to build, click on the PlatformIO icon in the left panel.
+6) In the Project Tasks window, drill into `env:d1_mini`* > General > Click Build!
+
+\* = While the project actually uses a Wemos D1 Mini, this code should still work with no issues on a NodeMCU like in the schematic picture.
 
 You should leave "STEPS_TO_CLOSE" at 12 to start with.  It can be adjusted for your specific blinds
 
@@ -51,6 +67,10 @@ cover:
     position_open: 0
     position_closed: 12
   ```
+
+## KNOWN ISSUES:
+* Blinds default to the `Open` position when they reboot for some reason.
+  * This is my main reason for forking this project. So expect it to be fixed soon hopefully.
   
 ## Recommended Tools
 
@@ -58,4 +78,4 @@ Ender3 3d Printer: https://amzn.to/2GcznnZ
 
 Dupont Crimper and Connector Set: https://amzn.to/2X1Oeap
 
-## Alexa only support available in the releases tab of this repo!
+## Unlike Rob, I do not support an Alexa based code-base.
