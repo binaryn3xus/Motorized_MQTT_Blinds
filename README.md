@@ -36,17 +36,29 @@ Download the correct STL file(s) for your style of tilt rod. You will find all t
 
 I recommend using VSCode with the PlatformIO extension. So these instructions will only support this method:
 
-## First-Time Setupdfvb 
+## First-Time Setup
 1) Clone the project or download/unzip the files from the browser
 2) Open in VSCode
 3) Rename `user_config.h.sample` to `user_config.h`
 4) Fill out `user_config.h` with your information for your setup.
 5) When you are ready to build, click on the PlatformIO icon in the left panel.
 6) In the Project Tasks window, drill into `env:d1_mini`* > General > Click Build!
+7) You will find your new bin file in the `build/d1_mini` folder.
+8) Plugin your device and use some kind of flashing tool to do your initial flash. Recommended: [Tasmotizer](https://github.com/tasmota/tasmotizer)
 
 \* = While the project actually uses a Wemos D1 Mini, this code should still work with no issues on a NodeMCU like in the schematic picture.
 
 You should leave "STEPS_TO_CLOSE" at 12 to start with.  It can be adjusted for your specific blinds
+
+## OTA Updates
+For future updates it is easier to update them in place rather than taking down the blinds and re-flashing. I could never get ArduinoOTA to work for me, so instead I changed to using an HTTP Update Server.
+
+1) Get your bin file following steps 1-7 above.
+2) Get the IP address of the device on your network.
+3) Navigate to http://YOUR-DEVICE-IP/firmware (unless you changed the update path in your `user_config.h` file)
+4) Click browse under `Firmware` and locate your new bin file
+5) Click 'Update Firmware'
+6) It will likely redirect you to a 404 page after it successfully updates. However, it should have updated successfully.
 
 ## Home Assistant YAML
 
@@ -67,6 +79,8 @@ cover:
     position_open: 0
     position_closed: 12
   ```
+
+  If you changed your "STEPS_TO_CLOSE" in your `user_config.h` file then make sure to update the `position_closed` value here.
 
 ## KNOWN ISSUES:
 * Blinds default to the `Open` position when they reboot for some reason.
