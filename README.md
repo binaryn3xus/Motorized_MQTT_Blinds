@@ -92,4 +92,12 @@ Ender3 3d Printer: https://amzn.to/2GcznnZ
 
 Dupont Crimper and Connector Set: https://amzn.to/2X1Oeap
 
+## Breakout Board GERBER Files (Optional)
+
+I wanted something a little cleaner for when I do the actual installs. So I created a breakout board for this. I have included the GERBER files if you want to have your own printed.
+
+Here is a 3d render of the board:
+
+![Breakout Board Render Picture](extra/images/BreakoutBoard1.1.png)
+
 ## Unlike Rob, I do not support an Alexa based code-base.
