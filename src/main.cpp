@@ -8,6 +8,7 @@
 #include "user_config.h"             //user defined variables
 
 WiFiClient espClient;
+IPAddress deviceIpAddress;
 PubSubClient client(espClient);
 ESP8266WebServer httpServer(80);
 ESP8266HTTPUpdateServer httpUpdater;
@@ -49,7 +50,8 @@ void setup_wifi()
   Serial.println("");
   Serial.println("WiFi connected");
   Serial.println("IP address: ");
-  Serial.println(WiFi.localIP());
+  deviceIpAddress = WiFi.localIP();
+  Serial.println(deviceIpAddress);
 }
 
 void reconnect()
@@ -187,6 +189,22 @@ void checkIn()
   client.publish(USER_MQTT_CLIENT_NAME "/checkIn", "OK");
 }
 
+String GetDeviceDetailsHtml(){
+    String htmlString = "<html><head><title>" + String(USER_MQTT_CLIENT_NAME) + "</title></head><body><p>";
+    htmlString += "<strong>MQTT Client Name:</strong> " + String(USER_MQTT_CLIENT_NAME) + "<br/>";
+    htmlString += "<strong>MQTT Server:</strong> " + String(USER_MQTT_SERVER) + ":" + String(USER_MQTT_PORT) + "<br/>";
+    htmlString += "<strong>Assigned Network SSID:</strong> " + String(USER_SSID) + "<br />";
+    htmlString += "<strong>IP Address:</strong> " + deviceIpAddress.toString() + "<br />";
+    htmlString += "<strong>Location:</strong> " + String(LOCATION) + "<br />";
+    htmlString += "<p><a href=\"" + String(OTAPATH) + "\">Go To Update Firmware</a></p>";
+    htmlString += "</body></html>";
+    return htmlString;
+}
+
+void update_status(){
+  httpServer.send(200, "text/html", GetDeviceDetailsHtml());
+}
+
 //Run once setup
 void setup()
 {
@@ -203,7 +221,7 @@ void setup()
   setup_wifi();
   client.setServer(mqtt_server, mqtt_port);
   client.setCallback(callback);
-
+  httpServer.on("/", update_status);
   MDNS.begin(USER_MQTT_CLIENT_NAME);
   httpUpdater.setup(&httpServer, OTAPATH);
   httpServer.begin();
