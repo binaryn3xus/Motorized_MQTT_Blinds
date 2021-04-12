@@ -34,11 +34,9 @@ const char *mqtt_client_name = USER_MQTT_CLIENT_NAME;
 //Functions
 void setup_wifi()
 {
+  Serial.println(__cplusplus);
   // We start by connecting to a WiFi network
-  Serial.println();
-  Serial.print("Connecting to ");
-  Serial.println(ssid);
-
+  Serial.println("Connecting to " + String(ssid));
   WiFi.begin(ssid, password);
 
   while (WiFi.status() != WL_CONNECTED)
@@ -48,10 +46,8 @@ void setup_wifi()
   }
 
   Serial.println("");
-  Serial.println("WiFi connected");
-  Serial.println("IP address: ");
   deviceIpAddress = WiFi.localIP();
-  Serial.println(deviceIpAddress);
+  Serial.println("WiFi connected! IP address: " + deviceIpAddress.toString());
 }
 
 void reconnect()
@@ -96,15 +92,12 @@ void reconnect()
 
 void callback(char *topic, byte *payload, unsigned int length)
 {
-  Serial.print("Message arrived [");
+  Serial.printf("Message arrived [%s]", topic);
   String newTopic = topic;
-  Serial.print(topic);
-  Serial.print("] ");
   payload[length] = '\0';
   String newPayload = String((char *)payload);
   int intPayload = newPayload.toInt();
   Serial.println(newPayload);
-  Serial.println();
   newPayload.toCharArray(charPayload, newPayload.length() + 1);
   if (newTopic == USER_MQTT_CLIENT_NAME "/blindsCommand")
   {
@@ -196,6 +189,8 @@ String GetDeviceDetailsHtml(){
     htmlString += "<strong>Assigned Network SSID:</strong> " + String(USER_SSID) + "<br />";
     htmlString += "<strong>IP Address:</strong> " + deviceIpAddress.toString() + "<br />";
     htmlString += "<strong>Location:</strong> " + String(LOCATION) + "<br />";
+    htmlString += "<p><a href=" + String(OPEN_WEBUI_PATH) + ">Open Blinds</a></p>";
+    htmlString += "<p><a href=" + String(CLOSE_WEBUI_PATH) + ">Close Blinds</a></p>";
     htmlString += "<p><a href=\"" + String(OTAPATH) + "\">Go To Update Firmware</a></p>";
     htmlString += "</body></html>";
     return htmlString;
@@ -203,6 +198,18 @@ String GetDeviceDetailsHtml(){
 
 void update_status(){
   httpServer.send(200, "text/html", GetDeviceDetailsHtml());
+}
+
+void WebOpenBlinds(){
+  Serial.write("Sending Open Command from WebUI...");
+  newPosition = 12;
+  httpServer.send(200, "text/html", "Sent Open Command");
+}
+
+void WebCloseBlinds(){
+  Serial.write("Sending Close Command from WebUI...");
+  newPosition = 0;
+  httpServer.send(200, "text/html", "Sent Close Command");
 }
 
 //Run once setup
@@ -222,6 +229,8 @@ void setup()
   client.setServer(mqtt_server, mqtt_port);
   client.setCallback(callback);
   httpServer.on("/", update_status);
+  httpServer.on(OPEN_WEBUI_PATH, WebOpenBlinds);
+  httpServer.on(CLOSE_WEBUI_PATH, WebCloseBlinds);
   MDNS.begin(USER_MQTT_CLIENT_NAME);
   httpUpdater.setup(&httpServer, OTAPATH);
   httpServer.begin();
