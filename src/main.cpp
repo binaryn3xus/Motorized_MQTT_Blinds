@@ -90,6 +90,42 @@ void reconnect()
   }
 }
 
+char *IntToChar(int currentPosition)
+{
+  char *ch = new char;
+  String temp_str = String(currentPosition);
+  temp_str.toCharArray(ch, temp_str.length() + 1);
+  return ch;
+}
+
+void SetPosition(unsigned int positionNum)
+{
+  if (positionNum <= STEPS_TO_CLOSE && positionNum >= (STEPS_TO_CLOSE*(-1)))
+  {
+    auto positionCharArray = IntToChar(positionNum);
+    client.publish(USER_MQTT_CLIENT_NAME "/positionCommand", positionCharArray, false);
+  }
+  else
+  {
+    Serial.write("Invalid range for 'positionCommand'");
+  }
+}
+
+void Close()
+{
+  SetPosition(STEPS_TO_CLOSE);
+}
+
+void Stop()
+{
+  SetPosition(currentPosition);
+}
+
+void Open()
+{
+  SetPosition(0);
+}
+
 void callback(char *topic, byte *payload, unsigned int length)
 {
   Serial.printf("Message arrived [%s]", topic);
@@ -103,20 +139,15 @@ void callback(char *topic, byte *payload, unsigned int length)
   {
     if (newPayload == "OPEN")
     {
-      client.publish(USER_MQTT_CLIENT_NAME "/positionCommand", "0", true);
+      Open();
     }
     else if (newPayload == "CLOSE")
     {
-      int stepsToClose = STEPS_TO_CLOSE;
-      String temp_str = String(stepsToClose);
-      temp_str.toCharArray(charPayload, temp_str.length() + 1);
-      client.publish(USER_MQTT_CLIENT_NAME "/positionCommand", charPayload, true);
+      Close();
     }
     else if (newPayload == "STOP")
     {
-      String temp_str = String(currentPosition);
-      temp_str.toCharArray(positionPublish, temp_str.length() + 1);
-      client.publish(USER_MQTT_CLIENT_NAME "/positionCommand", positionPublish, true);
+      Stop();
     }
   }
   if (newTopic == USER_MQTT_CLIENT_NAME "/positionCommand")
@@ -182,31 +213,35 @@ void checkIn()
   client.publish(USER_MQTT_CLIENT_NAME "/checkIn", "OK");
 }
 
-String GetDeviceDetailsHtml(){
-    String htmlString = "<html><head><title>" + String(USER_MQTT_CLIENT_NAME) + "</title></head><body><p>";
-    htmlString += "<strong>MQTT Client Name:</strong> " + String(USER_MQTT_CLIENT_NAME) + "<br/>";
-    htmlString += "<strong>MQTT Server:</strong> " + String(USER_MQTT_SERVER) + ":" + String(USER_MQTT_PORT) + "<br/>";
-    htmlString += "<strong>Assigned Network SSID:</strong> " + String(USER_SSID) + "<br />";
-    htmlString += "<strong>IP Address:</strong> " + deviceIpAddress.toString() + "<br />";
-    htmlString += "<strong>Location:</strong> " + String(LOCATION) + "<br />";
-    htmlString += "<p><a href=" + String(OPEN_WEBUI_PATH) + ">Open Blinds</a></p>";
-    htmlString += "<p><a href=" + String(CLOSE_WEBUI_PATH) + ">Close Blinds</a></p>";
-    htmlString += "<p><a href=\"" + String(OTAPATH) + "\">Go To Update Firmware</a></p>";
-    htmlString += "</body></html>";
-    return htmlString;
+String GetDeviceDetailsHtml()
+{
+  String htmlString = "<html><head><title>" + String(USER_MQTT_CLIENT_NAME) + "</title></head><body><p>";
+  htmlString += "<strong>MQTT Client Name:</strong> " + String(USER_MQTT_CLIENT_NAME) + "<br/>";
+  htmlString += "<strong>MQTT Server:</strong> " + String(USER_MQTT_SERVER) + ":" + String(USER_MQTT_PORT) + "<br/>";
+  htmlString += "<strong>Assigned Network SSID:</strong> " + String(USER_SSID) + "<br />";
+  htmlString += "<strong>IP Address:</strong> " + deviceIpAddress.toString() + "<br />";
+  htmlString += "<strong>Location:</strong> " + String(LOCATION) + "<br />";
+  htmlString += "<p><a href=" + String(OPEN_WEBUI_PATH) + ">Open Blinds</a></p>";
+  htmlString += "<p><a href=" + String(CLOSE_WEBUI_PATH) + ">Close Blinds</a></p>";
+  htmlString += "<p><a href=\"" + String(OTAPATH) + "\">Go To Update Firmware</a></p>";
+  htmlString += "</body></html>";
+  return htmlString;
 }
 
-void update_status(){
+void update_status()
+{
   httpServer.send(200, "text/html", GetDeviceDetailsHtml());
 }
 
-void WebOpenBlinds(){
+void WebOpenBlinds()
+{
   Serial.write("Sending Open Command from WebUI...");
   newPosition = 12;
   httpServer.send(200, "text/html", "Sent Open Command");
 }
 
-void WebCloseBlinds(){
+void WebCloseBlinds()
+{
   Serial.write("Sending Close Command from WebUI...");
   newPosition = 0;
   httpServer.send(200, "text/html", "Sent Close Command");
