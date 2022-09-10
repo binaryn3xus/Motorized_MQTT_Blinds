@@ -15,9 +15,11 @@ ESP8266HTTPUpdateServer httpUpdater;
 SimpleTimer timer;
 AH_EasyDriver shadeStepper(STEPPER_STEPS_PER_REV, STEPPER_DIR_PIN, STEPPER_STEP_PIN, STEPPER_MICROSTEP_1_PIN, STEPPER_MICROSTEP_2_PIN, STEPPER_SLEEP_PIN);
 
-//Global Variables
+// Global Variables
 bool boot = true;
 int currentPosition = 0;
+int reconnectRetries = 0;
+int maxReconnectRetries = 150;
 int newPosition = 0;
 char positionPublish[50];
 bool moving = false;
@@ -31,10 +33,9 @@ const char *mqtt_user = USER_MQTT_USERNAME;
 const char *mqtt_pass = USER_MQTT_PASSWORD;
 const char *mqtt_client_name = USER_MQTT_CLIENT_NAME;
 
-//Functions
+// Functions
 void setup_wifi()
 {
-  Serial.println(__cplusplus);
   // We start by connecting to a WiFi network
   Serial.println("Connecting to " + String(ssid));
   WiFi.begin(ssid, password);
@@ -44,48 +45,35 @@ void setup_wifi()
     delay(500);
     Serial.print(".");
   }
-
-  Serial.println("");
   deviceIpAddress = WiFi.localIP();
-  Serial.println("WiFi connected! IP address: " + deviceIpAddress.toString());
+  Serial.println("\nWiFi connected! IP address: " + deviceIpAddress.toString());
 }
 
 void reconnect()
 {
-  int retries = 0;
-  while (!client.connected())
+  if (!client.connected())
   {
-    if (retries < 150)
+    Serial.println("Attempting MQTT connection [" + String(reconnectRetries) + "] " + String(mqtt_user) + "@" + String(USER_MQTT_SERVER) + "...");
+    if (client.connect(mqtt_client_name, mqtt_user, mqtt_pass))
     {
-      Serial.print("Attempting MQTT connection...");
-      if (client.connect(mqtt_client_name, mqtt_user, mqtt_pass))
+      Serial.println("Connected to MQTT server!");
+      if (boot == false)
       {
-        Serial.println("connected");
-        if (boot == false)
-        {
-          client.publish(USER_MQTT_CLIENT_NAME "/checkIn", "Reconnected");
-        }
-        if (boot == true)
-        {
-          client.publish(USER_MQTT_CLIENT_NAME "/checkIn", "Rebooted");
-        }
-        // ... and resubscribe
-        client.subscribe(USER_MQTT_CLIENT_NAME "/blindsCommand");
-        client.subscribe(USER_MQTT_CLIENT_NAME "/positionCommand");
+        client.publish(USER_MQTT_CLIENT_NAME "/checkIn", "Reconnected");
       }
-      else
+      if (boot == true)
       {
-        Serial.print("failed, rc=");
-        Serial.print(client.state());
-        Serial.println(" try again in 5 seconds");
-        retries++;
-        // Wait 5 seconds before retrying
-        delay(5000);
+        client.publish(USER_MQTT_CLIENT_NAME "/checkIn", "Rebooted");
       }
+      // ... and resubscribe
+      client.subscribe(USER_MQTT_CLIENT_NAME "/blindsCommand");
+      client.subscribe(USER_MQTT_CLIENT_NAME "/positionCommand");
     }
-    if (retries > 149)
+    else
     {
-      ESP.restart();
+      Serial.println("Connection failed, rc=" + String(client.state()) + "; Trying again in 5 seconds");
+      reconnectRetries++; // Wait 5 seconds before retrying
+      delay(5000);
     }
   }
 }
@@ -173,8 +161,8 @@ void processStepper()
     client.publish(USER_MQTT_CLIENT_NAME "/positionState", positionPublish);
     moving = false;
   }
-  Serial.println(currentPosition);
-  Serial.println(newPosition);
+  Serial.println("Current Position: "+currentPosition);
+  Serial.println("New Position: "+newPosition);
 }
 
 void checkIn()
@@ -182,37 +170,41 @@ void checkIn()
   client.publish(USER_MQTT_CLIENT_NAME "/checkIn", "OK");
 }
 
-String GetDeviceDetailsHtml(){
-    String htmlString = "<html><head><title>" + String(USER_MQTT_CLIENT_NAME) + "</title></head><body><p>";
-    htmlString += "<strong>MQTT Client Name:</strong> " + String(USER_MQTT_CLIENT_NAME) + "<br/>";
-    htmlString += "<strong>MQTT Server:</strong> " + String(USER_MQTT_SERVER) + ":" + String(USER_MQTT_PORT) + "<br/>";
-    htmlString += "<strong>Assigned Network SSID:</strong> " + String(USER_SSID) + "<br />";
-    htmlString += "<strong>IP Address:</strong> " + deviceIpAddress.toString() + "<br />";
-    htmlString += "<strong>Location:</strong> " + String(LOCATION) + "<br />";
-    htmlString += "<p><a href=" + String(OPEN_WEBUI_PATH) + ">Open Blinds</a></p>";
-    htmlString += "<p><a href=" + String(CLOSE_WEBUI_PATH) + ">Close Blinds</a></p>";
-    htmlString += "<p><a href=\"" + String(OTAPATH) + "\">Go To Update Firmware</a></p>";
-    htmlString += "</body></html>";
-    return htmlString;
+String GetDeviceDetailsHtml()
+{
+  String htmlString = "<html><head><title>" + String(USER_MQTT_CLIENT_NAME) + "</title></head><body><p>";
+  htmlString += "<strong>MQTT Client Name:</strong> " + String(USER_MQTT_CLIENT_NAME) + "<br/>";
+  htmlString += "<strong>MQTT Server:</strong> " + String(USER_MQTT_SERVER) + ":" + String(USER_MQTT_PORT) + "<br/>";
+  htmlString += "<strong>Assigned Network SSID:</strong> " + String(USER_SSID) + "<br />";
+  htmlString += "<strong>IP Address:</strong> " + deviceIpAddress.toString() + "<br />";
+  htmlString += "<strong>Location:</strong> " + String(LOCATION) + "<br />";
+  htmlString += "<p><a href=" + String(OPEN_WEBUI_PATH) + ">Open Blinds</a></p>";
+  htmlString += "<p><a href=" + String(CLOSE_WEBUI_PATH) + ">Close Blinds</a></p>";
+  htmlString += "<p><a href=\"" + String(OTAPATH) + "\">Go To Update Firmware</a></p>";
+  htmlString += "</body></html>";
+  return htmlString;
 }
 
-void update_status(){
+void update_status()
+{
   httpServer.send(200, "text/html", GetDeviceDetailsHtml());
 }
 
-void WebOpenBlinds(){
+void WebOpenBlinds()
+{
   Serial.write("Sending Open Command from WebUI...");
   newPosition = 12;
   httpServer.send(200, "text/html", "Sent Open Command");
 }
 
-void WebCloseBlinds(){
+void WebCloseBlinds()
+{
   Serial.write("Sending Close Command from WebUI...");
   newPosition = 0;
   httpServer.send(200, "text/html", "Sent Close Command");
 }
 
-//Run once setup
+// Run once setup
 void setup()
 {
   Serial.begin(115200);
@@ -224,18 +216,19 @@ void setup()
 #if DRIVER_INVERTED_SLEEP == 0
   shadeStepper.sleepON();
 #endif
+  reconnectRetries = 0;
   WiFi.mode(WIFI_AP_STA);
   setup_wifi();
-  client.setServer(mqtt_server, mqtt_port);
-  client.setCallback(callback);
   httpServer.on("/", update_status);
   httpServer.on(OPEN_WEBUI_PATH, WebOpenBlinds);
   httpServer.on(CLOSE_WEBUI_PATH, WebCloseBlinds);
-  MDNS.begin(USER_MQTT_CLIENT_NAME);
   httpUpdater.setup(&httpServer, OTAPATH);
   httpServer.begin();
+  MDNS.begin(USER_MQTT_CLIENT_NAME);
   MDNS.addService("http", "tcp", 80);
-  Serial.printf("HTTPUpdateServer ready! Open http://%s.local/update in your browser\n", USER_MQTT_CLIENT_NAME);
+  client.setServer(mqtt_server, mqtt_port);
+  client.setCallback(callback);
+  Serial.println("HTTPUpdateServer ready! Open http://" + deviceIpAddress.toString() + OTAPATH + " in your browser");
 
   delay(10);
   timer.setInterval(((1 << STEPPER_MICROSTEPPING) * 5800) / STEPPER_SPEED, processStepper);
@@ -246,7 +239,15 @@ void loop()
 {
   if (!client.connected())
   {
-    reconnect();
+    if (reconnectRetries <= maxReconnectRetries)
+    {
+      reconnect();
+    }
+    else
+    {
+      Serial.println("Too many retry attempts [" + String(reconnectRetries) + " of " + String(maxReconnectRetries) + "], rebooting...");
+      ESP.restart();
+    }
   }
   client.loop();
   httpServer.handleClient();

@@ -6,7 +6,10 @@
 #define USER_MQTT_PASSWORD        "MQTT-PASSWORD"
 #define USER_MQTT_CLIENT_NAME     "BlindsMCU"     // Used to define MQTT topics, MQTT Client ID, and ArduinoOTA
 #define OTAPATH                   "/firmware"     // Set path for update
+#define OPEN_WEBUI_PATH           "/open"
+#define CLOSE_WEBUI_PATH          "/close"
 #define SERVERPORT                80              // Server port
+#define LOCATION                  "Helpful Description of Device to show on WebServer, ie location of blinds"
 
 #define STEPPER_SPEED             35              //Defines the speed in RPM for your stepper motor
 #define STEPPER_STEPS_PER_REV     1028            //Defines the number of pulses that is required for the stepper to rotate 360 degrees
