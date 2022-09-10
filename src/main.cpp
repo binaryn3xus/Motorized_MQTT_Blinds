@@ -9,6 +9,7 @@
 
 WiFiClient espClient;
 IPAddress deviceIpAddress;
+String deviceMacAddress;
 PubSubClient client(espClient);
 ESP8266WebServer httpServer(80);
 ESP8266HTTPUpdateServer httpUpdater;
@@ -46,6 +47,7 @@ void setup_wifi()
     Serial.print(".");
   }
   deviceIpAddress = WiFi.localIP();
+  deviceMacAddress = WiFi.macAddress();
   Serial.println("\nWiFi connected! IP address: " + deviceIpAddress.toString());
 }
 
@@ -161,8 +163,8 @@ void processStepper()
     client.publish(USER_MQTT_CLIENT_NAME "/positionState", positionPublish);
     moving = false;
   }
-  Serial.println("Current Position: "+currentPosition);
-  Serial.println("New Position: "+newPosition);
+  // Serial.println("Current Position: [" + String(currentPosition) + "]");
+  // Serial.println("New Position: [" + String(newPosition) + "]");
 }
 
 void checkIn()
@@ -172,16 +174,20 @@ void checkIn()
 
 String GetDeviceDetailsHtml()
 {
-  String htmlString = "<html><head><title>" + String(USER_MQTT_CLIENT_NAME) + "</title></head><body><p>";
-  htmlString += "<strong>MQTT Client Name:</strong> " + String(USER_MQTT_CLIENT_NAME) + "<br/>";
-  htmlString += "<strong>MQTT Server:</strong> " + String(USER_MQTT_SERVER) + ":" + String(USER_MQTT_PORT) + "<br/>";
-  htmlString += "<strong>Assigned Network SSID:</strong> " + String(USER_SSID) + "<br />";
-  htmlString += "<strong>IP Address:</strong> " + deviceIpAddress.toString() + "<br />";
-  htmlString += "<strong>Location:</strong> " + String(LOCATION) + "<br />";
-  htmlString += "<p><a href=" + String(OPEN_WEBUI_PATH) + ">Open Blinds</a></p>";
-  htmlString += "<p><a href=" + String(CLOSE_WEBUI_PATH) + ">Close Blinds</a></p>";
-  htmlString += "<p><a href=\"" + String(OTAPATH) + "\">Go To Update Firmware</a></p>";
-  htmlString += "</body></html>";
+  String htmlString = "<html><head><title>" + String(USER_MQTT_CLIENT_NAME) + "</title></head><body style='background-color:#1e1e1e; color:#FFF'><table><tbody>";
+  htmlString += "<tr><th colspan='2'><h1>MQTT Info</h1></th></tr>";
+  htmlString += "<tr><td><strong>MQTT Client Name</strong></td><td>" + String(USER_MQTT_CLIENT_NAME) + "</td></tr>";
+  htmlString += "<tr><td><strong>MQTT Server</strong></td><td>" + String(USER_MQTT_SERVER) + ":" + String(USER_MQTT_PORT) + "</td></tr>";
+  htmlString += "<tr><th colspan='2'><h1>---<br />Network Info</h1></th></tr>";
+  htmlString += "<tr><td><strong>Assigned Network SSID</strong></td><td>" + String(USER_SSID) + "</td></tr>";
+  htmlString += "<tr><td><strong>IP Address</strong></td><td>" + deviceIpAddress.toString() + "</td></tr>";
+  htmlString += "<tr><td><strong>MAC Address</strong></td><td>" + deviceMacAddress + "</td></tr>";
+  htmlString += "<tr><th colspan='2'><h1>---<br />Details & Actions</h1></th></tr>";
+  htmlString += "<tr><td><strong>Location</strong></td><td>" + String(LOCATION) + "</td></tr>";
+  htmlString += "<tr><td colspan='2'><a href=" + String(OPEN_WEBUI_PATH) + " style='color:#FFF;text-decoration:underline;'>Open Blinds</a></td></tr>";
+  htmlString += "<tr><td colspan='2' style='color:#FFF;text-decoration:underline;'><a href=" + String(CLOSE_WEBUI_PATH) + " style='color:#FFF;text-decoration:underline;'>Close Blinds</a></td></tr>";
+  htmlString += "<tr><td colspan='2' style='color:#FFF;text-decoration:underline;'><a href=\"" + String(OTAPATH) + "\" style='color:#FFF;text-decoration:underline;'>Go To Update Firmware</a></td></tr>";
+  htmlString += "</tbody></table></body></html>";
   return htmlString;
 }
 
