@@ -1,5 +1,6 @@
 #define USER_SSID                 "YOUR-WIFI-SSID"
 #define USER_PASSWORD             "YOUR-WIFI-PASS"
+#define USER_NETWORK_HOSTNAME     ""              // Leave blank to use MQTT Client Name 
 #define USER_MQTT_SERVER          "IP-MQTT-Server"
 #define USER_MQTT_PORT            1883
 #define USER_MQTT_USERNAME        "MQTT-USERNAME"
