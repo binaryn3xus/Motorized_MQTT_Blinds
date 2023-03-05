@@ -33,6 +33,7 @@ const int mqtt_port = USER_MQTT_PORT;
 const char *mqtt_user = USER_MQTT_USERNAME;
 const char *mqtt_pass = USER_MQTT_PASSWORD;
 const char *mqtt_client_name = USER_MQTT_CLIENT_NAME;
+const char *network_hostname = USER_NETWORK_HOSTNAME;
 
 // Functions
 void setup_wifi()
@@ -40,6 +41,19 @@ void setup_wifi()
   // We start by connecting to a WiFi network
   Serial.println("Connecting to " + String(ssid));
   WiFi.begin(ssid, password);
+
+  // Set hostname
+  if (strlen(network_hostname) == 0)
+  {
+    WiFi.hostname(mqtt_client_name);
+  }
+  else
+  {
+    WiFi.hostname(network_hostname);
+  }
+
+  // Set hostname
+  WiFi.hostname(mqtt_client_name);
 
   while (WiFi.status() != WL_CONNECTED)
   {
