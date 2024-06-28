@@ -237,7 +237,7 @@ void setup()
   shadeStepper.sleepON();
 #endif
   reconnectRetries = 0;
-  WiFi.mode(WIFI_AP_STA);
+  WiFi.mode(WIFI_STA);
   setup_wifi();
   httpServer.on("/", update_status);
   httpServer.on(OPEN_WEBUI_PATH, WebOpenBlinds);
